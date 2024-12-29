@@ -8,7 +8,6 @@ public final class ServerUtils extends SqlUtils {
 
     public static void loadAttributes(final HttpSession session) {
         ServerData data = SessionUtils.getData(session);
-        data.setMenuChoice("");
     }
 
 }
