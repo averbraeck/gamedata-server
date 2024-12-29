@@ -100,7 +100,7 @@ public class GameDataServer extends HttpServlet
                 config.setMaximumPoolSize(2);
                 config.setDriverClassName("com.mysql.cj.jdbc.Driver");
                 DataSource dataSource = new HikariDataSource(config);
-                ctx.bind("/gamedata-dashboard_datasource", dataSource);
+                ctx.bind("/gamedata-server_datasource", dataSource);
             }
         }
         catch (NamingException e)
@@ -151,7 +151,7 @@ public class GameDataServer extends HttpServlet
             {
                 data.setUsername(user.getName());
                 data.setUser(user);
-                response.sendRedirect("jsp/dashboard/server.jsp");
+                response.sendRedirect("jsp/server/server.jsp");
                 return;
             }
         }
@@ -163,7 +163,7 @@ public class GameDataServer extends HttpServlet
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException
     {
-        response.sendRedirect("jsp/dashboard/login.jsp");
+        response.sendRedirect("jsp/server/login.jsp");
     }
 
 }

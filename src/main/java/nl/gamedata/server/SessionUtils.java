@@ -25,7 +25,7 @@ public final class SessionUtils
     {
         if (request.getSession().getAttribute("userId") == null)
         {
-            response.sendRedirect("jsp/admin/login.jsp");
+            response.sendRedirect("jsp/server/login.jsp");
             return false;
         }
         @SuppressWarnings("unchecked")
@@ -33,7 +33,7 @@ public final class SessionUtils
         String storedSessionId = idSessionMap.get(request.getSession().getAttribute("userId"));
         if (!request.getSession().getId().equals(storedSessionId))
         {
-            response.sendRedirect("jsp/admin/login-session.jsp"); // TODO: session management
+            response.sendRedirect("jsp/server/login-session.jsp"); // TODO: session management
             return false;
         }
         return true;
