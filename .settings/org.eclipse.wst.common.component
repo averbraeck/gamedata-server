@@ -5,6 +5,9 @@
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/resources"/>
+        <dependent-module archiveName="gamedata-common.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gamedata-common/gamedata-common">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <property name="context-root" value="gamedata-server"/>
         <property name="java-output-path" value="/gamedata-server/target/classes"/>
     </wb-module>

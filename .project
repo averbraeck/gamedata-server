@@ -3,6 +3,7 @@
 	<name>gamedata-server</name>
 	<comment></comment>
 	<projects>
+		<project>gamedata-common</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
