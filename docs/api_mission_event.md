@@ -3,7 +3,7 @@
 The fields for the mission event are as follows. Note that the field name is used in lower case for the key in the form-data GET or POST request, as the key in the JSON payload, and as the tag name in the XML payload. All keys are in lower case and use 'snaking' with underscores as indicated in the table.
 
 | key           | required? | type | explanation         |
-| ------------- | --------- | ------------------- |
+| ------------- | --------- | ---- | ------------------- |
 | `data`          | required | string | Value should be `mission_event`, lower case with underscore. |
 | `session_token` | required | string(45) | Token to identify the game session, game version, game, and organization responsible for playing the game. |
 | `game_mission`  | required | string(16) | Code of the game mission for which this is an event. Every game has at least one mission. The mission code will be looked up for the game that is implicitly encoded in the `session_token`. |
