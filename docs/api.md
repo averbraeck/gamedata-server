@@ -89,8 +89,8 @@ Escaping characters in the JSON string, such as a double quote, follows the JSON
 | --------- | ---- |
 | newline   | \n   |
 | tab       | \t   |
-| "         | \"   |
-| \         | \\   |
+| "         | \\"  |
+| \         | \\\\ |
 
 It is best to use an up-to-date library to 'stringify' the JSON strings.
 
