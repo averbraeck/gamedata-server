@@ -8,7 +8,7 @@ The fields for the mission event are as follows. Note that the field name is use
 | `session_token` | required | string(45) | Token to identify the game session, game version, game, and organization responsible for playing the game. |
 | `game_mission`  | required | string(16) | Code of the game mission for which this is an event. Every game has at least one mission. The mission code will be looked up for the game that is implicitly encoded in the `session_token`. |
 | `type`          | optional | string(45) | The type of data being sent. When not included, `string` is assumed. See below for a table with types. |
-| `key`           | required | string(45) | The key of maximum 45 characters. Although the key can contain any characters, keys usually do not have spaces and consist of ASCII characters. |
+| `key`           | required | string(45) | The key of maximum 45 characters. Although the key can contain any characters, keys typically do not have spaces and consist of ASCII characters. |
 | `value`        | required | text(65535) | The value belonging to the key, of the appropriate type. The value can be a multi-line string. Max 65,535 characters. |
 | `timestamp`   | don't use | timestamp | The timestamp is normally inserted by the server at the moment of receiving the data, and stored in UTC time. In case you would want to override the timestamp, it can be provided in the data. In that case, the server will not allocate it's own timestamp. |
 | `status`      | optional | string(45) | If the data sent is linked to some status, it can be provided in this field. Max 45 characters. |
@@ -18,11 +18,13 @@ The fields for the mission event are as follows. Note that the field name is use
 | `facilitator_initiated` | optional | boolean | Indicates whether the event was initiated by manual intervention of the facilitator (`true`) or an autonomous event by the game (`false`). The default value is `false`. | 
 
 
-## Values for `type`
+
+### Values for `type`
 
 | type       | explanation | 
 | ---------- | ----------- |
-| `string`     | Characters. Can be multi-line. utf-8 encoding is used. |
+| `string`     | Characters. Single-line. utf-8 encoding is used. |
+| `text`       | Characters. Can be multi-line. utf-8 encoding is used. |
 | `integer`    | Integer value. Can be positive or negative. A leading `+` sign is not allowed. |
 | `float`      | Floating-point value. Use a decimal point (no decimal comma, no thousands separators). Scientific notation is allowed, with an `E` or `e` for the exponent. An example is `6.24E+7` or `6.24E7`. The use of values `NaN`, `Inf` and `-Inf` are allowed. A leading `+` sign is not allowed. |
 | `boolean`   | Boolean value. Values that are correctly parsed are `T` or `1` or `true` or `TRUE` for a true value, and `F` or `0` or `false` or `FALSE` for a false value.
