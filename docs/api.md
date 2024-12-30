@@ -111,20 +111,17 @@ Content-Type: application/xml; charset=UTF-8
 Note that neither the content-type, nor the character set is case sensitive. They will be transformed to lower case before processing. The payload in the message is typically sent as a multi-line string:
 
 ```xml
-{
   <data>mission_event</data>
   <session_token>tk_5t4YP</session_token>
   <game_mission>M1</game_mission>
   <type>string</type>
   <key>task1</key>
   <value>started</value>
-}
 ```
 
 It is allowed, but not compulsory, to package the data into a `<gamedata>` tag:
 
 ```xml
-{
 <gamedata>
   <data>mission_event</data>
   <session_token>tk_5t4YP</session_token>
@@ -133,18 +130,17 @@ It is allowed, but not compulsory, to package the data into a `<gamedata>` tag:
   <key>task1</key>
   <value>started</value>
 </gamedata>
-}
 ```
 
 Escaping characters in the XML string, such as a less-than or bigger-than sign, follows the XML standards. Most used are:
 
-| Character | Code   |
-| --------- | ------ |
-| '         | &apos; |
-| "         | &quot; |
-| &         | &amp;  |
-| <         | &lt;   |
-| >         | &gt;   |
+| Character | Code       |
+| --------- | ---------- |
+| '         | &amp;apos; |
+| "         | &amp;quot; |
+| &         | &amp;amp;  |
+| <         | &amp;lt;   |
+| >         | &amp;gt;   |
 
 It is best to use an up-to-date library to encode the XML strings.
 
