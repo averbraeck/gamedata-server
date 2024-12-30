@@ -19,7 +19,30 @@ The fields for the mission event are as follows. Note that the field name is use
 
 
 
-### Values for `type`
+### Anonymous game session data
+If a particular Game Session does not exists yet, and the organization allows for the game to have anonymous sessions (`organization_game.anonymous_sessions` is equal to `1`), data can be logged in an 'anonymous' session. Instead of the session_token, the following data needs to be provided:
+
+| key           | required? | type | explanation         |
+| ------------- | --------- | ---- | ------------------- |
+| `data`          | required | string | Value should be `mission_event`, lower case with underscore. |
+| `game_session_code` | required | string(16) | Code to identify the game session. Make sure it is unique for the game - organization combination. |
+| `game_code` | required | string(20) | Code to identify the game. This record needs to exist in the database. |
+| `game_version_code` | required | string(16) | Code to identify the game-version within the game. This record needs to exist in the database. |
+| `organization_code` | required | string(16) | Code to identify the organization. This record needs to exist in the database. |
+
+When a record with the `session_code` already exists (with the correct `game_version` and `organization`), the data will be stored. When the `game_session` does not exist yet, a number of checks are carried out:
+
+- does the game with `game_code` exist?
+- does the game version identified by `game_version_code` exist?
+- does the organization with `organization_code` exist?
+- does the organization have access to the game? I.e., does the record `organization_game` exist for the game-organization combination?
+- is the value of `organization_game.anonymous_sessions` equal to `1` (true)?
+
+When all checks pass, the system will create a `game_session` record in the database, linking it to the `organization` and `game_version` that were provided. The `name` of the session will be equal to the `code` (this can be edited later). The value of `valid` will be set to `true`. The value of `play_date` will be set to the current date. 
+
+
+
+### Allowed values for `type`
 
 | type       | explanation | 
 | ---------- | ----------- |
