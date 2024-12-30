@@ -28,6 +28,128 @@ Characters that need to be escaped are (from https://en.wikipedia.org/wiki/Perce
 | ' | %27 | | ; | %3B | | ] | %5E | | &euro;  | %E2%82%AC |
 
 
+### POST request, form-encoded
+The same data format that is sent with a GET request can also be sent with a POST request. It needs the following `Content-Type`:
+
+```
+Content-Type: x-www-form-urlencoded
+```
+
+The `Content-Type` may be followed by a character set:
+
+```
+Content-Type: x-www-form-urlencoded; charset=UTF-8
+```
+
+Note that neither the content-type, nor the character set is case sensitive. They will be transformed to lower case before processing. The payload in the message is sent as a single-line string:
+
+```
+data=mission_event&session_token=tk_5t4YP&game_mission=M1&type=string&key=task1&value=started
+```
+
+It uses the same escape characters as shown in the GET information above.
+
+
+### POST request, json encoded
+The gamedata server application accepts JSON formatted data, which is convenient for Javascript and web-based applications. It needs the following `Content-Type`:
+
+```
+Content-Type: application/json
+```
+
+The `Content-Type` may be followed by a character set:
+
+```
+Content-Type: application/json; charset=UTF-8
+```
+
+Note that neither the content-type, nor the character set is case sensitive. They will be transformed to lower case before processing. The payload in the message is either sent as a single-line string (line break inserted for display purposes):
+
+```json
+{"data":"mission_event","session_token":"tk_5t4YP","game_mission":"M1",
+   "type":"string","key":"task1","value":"started"}
+```
+
+or as a multi-line string:
+
+```json
+{
+  "data":"mission_event",
+  "session_token":"tk_5t4YP",
+  "game_mission":"M1",
+  "type":"string",
+  "key":"task1",
+  "value":"started"
+}
+```
+
+Escaping characters in the JSON string, such as a double quote, follows the JSON standards. Most used are:
+
+| Character | Code |
+| --------- | ---- |
+| newline   | \n   |
+| tab       | \t   |
+| "         | \"   |
+| \         | \\   |
+
+It is best to use an up-to-date library to 'stringify' the JSON strings.
+
+
+### POST request, XML encoded
+The gamedata server application accepts XML formatted data, which can be convenient in certain programming environments. It needs the following `Content-Type`:
+
+```
+Content-Type: application/xml
+```
+
+The `Content-Type` may be followed by a character set:
+
+```
+Content-Type: application/xml; charset=UTF-8
+```
+
+Note that neither the content-type, nor the character set is case sensitive. They will be transformed to lower case before processing. The payload in the message is typically sent as a multi-line string:
+
+```xml
+{
+  <data>mission_event</data>
+  <session_token>tk_5t4YP</session_token>
+  <game_mission>M1</game_mission>
+  <type>string</type>
+  <key>task1</key>
+  <value>started</value>
+}
+```
+
+It is allowed, but not compulsory, to package the data into a `<gamedata>` tag:
+
+```xml
+{
+<gamedata>
+  <data>mission_event</data>
+  <session_token>tk_5t4YP</session_token>
+  <game_mission>M1</game_mission>
+  <type>string</type>
+  <key>task1</key>
+  <value>started</value>
+</gamedata>
+}
+```
+
+Escaping characters in the XML string, such as a less-than or bigger-than sign, follows the XML standards. Most used are:
+
+| Character | Code   |
+| --------- | ------ |
+| '         | &apos; |
+| "         | &quot; |
+| &         | &amp;  |
+| <         | &lt;   |
+| >         | &gt;   |
+
+It is best to use an up-to-date library to encode the XML strings.
+
+
+
 ## 2. Examples
 
 ### Setup 
@@ -66,7 +188,7 @@ https://gamedata.nl/gamedata-server/store?data="mission_event"&session_token="tk
 The server-side code will add the `timestamp`, and fill the compulsory field `player_initiated` with `true`.
 
 
-## Sending a minimum player event
+### Sending a player event
 Suppose a player with code "p24" and nickname "John" just finished task1 in mission 1. The data is sent as a json record to the game data server, either as a POST or as a GET request. 
 
 The POST request could send, e.g., the following data to `https://gamedata.nl/gamedata-server/store`:
@@ -95,7 +217,7 @@ https://gamedata.nl/gamedata-server/store?data="player_event"&session_token="tk_
 The server-side code will add the `timestamp`, and fill the compulsory field `player_initiated` with `true`. Furthermore, if no attempt is made yet, the data will be stored under "attempt #1". It is sufficient to fill either the name, or the display name. Many games will fill both, though.
 
 
-## Sending a minimum player score
+### Sending a player score
 Suppose the player with code "p24" and nickname "John" just scored 5 extra points for 'health' in mission M1, bringing the total 'health' score to 59. The data is sent as a json record to the game data server, either as a POST or as a GET request. 
 
 The POST request could send, e.g., the following data to `https://gamedata.nl/gamedata-server/store`:
