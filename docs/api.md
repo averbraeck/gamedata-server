@@ -1,6 +1,30 @@
 # API for sending game data
 
-## Example setup
+## 1. Technical requirements
+
+The data is sent using an http(s) request to the gamedata server. The data can be sent as a GET request or as a POST request. The content is encoded using simple key-value pairs without any nesting. For now, one message can be sent per request. The server reads the payload of the request, checks superficially (and quickly) for its correctness. When the message is correct, it is passed to a message queue for processing, and the response will be `200 OK`. In case the request is incorrect and cannot be processed as a result, the response sent will be `400 Bad Request`. 
+
+The following message types are accepted:
+
+### GET request
+When sending a GET request, all data is encoded in the http(s) address, using the well-known `?` and `&` construct. This is a very low-effort implementation that can be used in many applications without extensive programming. Note that many types of characters need to be escaped (see below). An example is:
+
+```
+https://gamedata.nl/gamedata-server/store?data=mission_event&session_token=tk_5t4YP
+  &game_mission=M1&type=string&key=task1&value=started
+```
+
+Characters that need to be escaped are:
+
+```
+| ----  | --- |
+| SPACE | %20 |
+```
+
+
+## 2. Examples
+
+### Setup 
 Suppose we have a setup with the following game, version, missions and session:
 
 - Game called AbcGame
@@ -10,7 +34,7 @@ Suppose we have a setup with the following game, version, missions and session:
 - No Game token, no organization-game token
 
 
-## Sending a minimum mission event
+### Sending a mission event
 Suppose the mission just opened task2 for players in mission 1. The data is sent as a json record to the game data server, either as a POST or as a GET request. 
 
 The POST request could send, e.g., the following data to `https://gamedata.nl/gamedata-server/store`:
