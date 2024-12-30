@@ -16,9 +16,13 @@ https://gamedata.nl/gamedata-server/store?data=mission_event&session_token=tk_5t
 
 Characters that need to be escaped are:
 
-| Character | Code | | Character | Code | | Character | Code |
-| --------- | ---- | | --------- | ---- | | --------- | ---- |
-| SPACE | %20 |
+| Character | Code | &nbsp; | Character | Code | &nbsp; | Character | Code |
+| --------- | ---- | ------ | --------- | ---- | ------ | --------- | ---- |
+| SPACE | %20 | | &vbar; | %7C | | ? | %3F |
+| < | %3C | | \ | %5C | | : | %3A |
+| > | %3E | | ^ | %5E | | @ | %40 |
+
+
 
 
 
