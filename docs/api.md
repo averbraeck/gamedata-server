@@ -14,16 +14,18 @@ https://gamedata.nl/gamedata-server/store?data=mission_event&session_token=tk_5t
   &game_mission=M1&type=string&key=task1&value=started
 ```
 
-Characters that need to be escaped are:
+Characters that need to be escaped are (from https://en.wikipedia.org/wiki/Percent-encoding):
 
-| Character | Code | &nbsp; | Character | Code | &nbsp; | Character | Code |
-| --------- | ---- | ------ | --------- | ---- | ------ | --------- | ---- |
-| SPACE | %20 | | &vbar; | %7C | | ? | %3F |
-| < | %3C | | \ | %5C | | : | %3A |
-| > | %3E | | ^ | %5E | | @ | %40 |
-
-
-
+| Character | Code | &nbsp; | Character | Code | &nbsp; | Character | Code | &nbsp; | Character | Code |
+| --------- | ---- | ------ | --------- | ---- | ------ | --------- | ---- | ------ | --------- | ---- |
+| SPACE | %20 | | ( | %28 | | < | %3C | | ^ | %5E |
+| ! | %21 | | ) | %29 | | = | %3D | | ` | %60 |
+| " | %22 | | * | %2A | | > | %3E | | { | %7B |
+| # | %23 | | + | %2B | | ? | %3F | | &vert; | %7C |
+| $ | %24 | | , | %2C | | @ | %40 | | } | %7D |
+| % | %25 | | / | %2F | | [ | %5B | | ~ | %7E |
+| & | %26 | | : | %3A | | \ | %5C | | &pound;  | %C2%A3 |
+| ' | %27 | | ; | %3B | | ] | %5E | | &euro;  | %E2%82%AC |
 
 
 ## 2. Examples
