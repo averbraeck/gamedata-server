@@ -5,7 +5,7 @@ The fields for the mission event are as follows. Note that the field name is use
 | key           | required? | type | explanation         |
 | ------------- | --------- | ---- | ------------------- |
 | `data`          | required | string | Value should be `mission_event`, lower case with underscore. |
-| `session_token` | required | string(45) | Token to identify the game session, game version, game, and organization responsible for playing the game. |
+| `session_token` | required | string(45) | Token to identify the game session, game version, game, and organization responsible for playing the game. See below for anonymous sessions that do not use a token, and where a session might be created on-the-fly. |
 | `organization_game_token` | depends | string(255) | Token that might be used by the organization to limit access in writing data to the database for the game. This value will only be checked if `organization_game.token_forced` is equal to `true` (`1`). When the token is forced, and it cannot be found for the provided game and organization, the record is not written to the database. When the token is not forced, it is not checked, and it does not need to be provided. |
 | `game_token` | depends | string(255) | Token that might be used by the game admin to limit access in writing data to the database for the game. This value will only be checked if `game.token_forced` is equal to `true` (`1`). When the token is forced, and it cannot be found for the provided game, the record is not written to the database. When the token is not forced, it is not checked, and it does not need to be provided. |
 | `game_mission`  | required | string(16) | Code of the game mission for which this is an event. Every game has at least one mission. The mission code will be looked up for the game that is implicitly encoded in the `session_token`. |
@@ -55,4 +55,23 @@ When all checks pass, the system will create a `game_session` record in the data
 | `boolean`   | Boolean value. Values that are correctly parsed are `T` or `1` or `true` or `TRUE` for a true value, and `F` or `0` or `false` or `FALSE` for a false value.
 
 Possible extensions for the types could be: `time`, `duration`, `color` and `coordinate`. These might be be implemented at a later stage.
+
+
+### Dealing with wrong or missing data
+
+| error      | behavior    | 
+| ---------- | ----------- |
+| `data` is not valid  | In other words, it is missing or not one of `mission_event`, `player_event`, `player_score`, `group_event` or `group_score`. In that case, data cannot be stored since we do not know where to store it. The data is written to disk into a log file instead. |
+| `session_token` not found  | When the `session_token` does not exist in the database, we do not know the session where to store the data, nor the `game` and the `organization`. Therefore, the data cannot be stored since we do not know to what game (version) and organization to link it. The data is written to disk into a log file instead. |
+| `organization_game_token` invalid | When the `organization_game_token` is forced, but not valid, the data will not be written to the database. The data is written to disk into a log file instead. |
+| `game_token` is not valid | When the `game_token` is forced, but not valid, the data will not be written to the database. The data is written to disk into a log file instead. |
+| `game_mission` does not exist | When the `game_mission` does not exist, it is impossible to link the `mission_data` to a mission. Therefore, the data will not be written to the database. The data is written to disk into a log file instead. |
+| `type` is invalid | When the `type` is not one of the permissable types (see above), the data is still written to the database. A warning is logged to the log file. |
+| `value` not valid | When the `value` does not correspond to the `type` (e.g., text for an integer type), the data will still be written to the database. A warning is logged to the log file. |
+| `timestamp` is invalid | If the `timestamp` is provided, but it does not contain a legible date plus time, data is still written to the database. The given timestamp is replaced by the timestamp of the server. A warning is logged to the log file. |
+| `facilitator_initiated` invalid | If the `facilitator_initiated` does not contain a boolean (`T` or `1` or `true` or `TRUE` for a true value, and `F` or `0` or `false` or `FALSE` for a false value), the value is assumed to be `false`. The data is still written to the database. A warning is logged to the log file. |
+| `game_code` not found | (for anonymous data). When the `game_code` does not exist in the database, we do not know for which game to store the data. Therefore, the data cannot be stored. The data is written to disk into a log file instead. |
+| `game_version_code` not found | (for anonymous data). When the `game_version_code` does not exist in the database, we do not know for which game version to store the data. Therefore, the data cannot be stored. The data is written to disk into a log file instead. |
+| `organization_code` not found | (for anonymous data). When the `organization_code` does not exist in the database, we do not know for which organization to store the data, nor whether the organization is allowed to store data for the game. Therefore, the data cannot be stored. The data is written to disk into a log file instead. |
+| string too long | When one of the strings is longer than the allowed number of characters, it is truncated. The (truncated) data is stored, if valid. A warning is issues to the log file. |
 
