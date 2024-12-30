@@ -16,10 +16,9 @@ https://gamedata.nl/gamedata-server/store?data=mission_event&session_token=tk_5t
 
 Characters that need to be escaped are:
 
-```
 | ----  | --- |
 | SPACE | %20 |
-```
+
 
 
 ## 2. Examples
