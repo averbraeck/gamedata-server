@@ -37,6 +37,7 @@ public class GameDataServer extends HttpServlet
     @Override
     public void init() throws ServletException
     {
+        System.out.println("init()");
         super.init();
         System.getProperties().setProperty("org.jooq.no-logo", "true");
 

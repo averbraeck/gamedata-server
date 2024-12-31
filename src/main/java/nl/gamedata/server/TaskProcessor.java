@@ -1,17 +1,37 @@
 package nl.gamedata.server;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.servlet.ServletException;
+import javax.sql.DataSource;
+
+import org.jooq.DSLContext;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import nl.gamedata.data.Tables;
+import nl.gamedata.data.tables.records.GameSessionRecord;
 
 /**
  * The TaskProcessor is for now a single-threaded process taking care of processing storage tasks from jobs in the queue.
@@ -24,6 +44,28 @@ public class TaskProcessor
     public static void startProcessing()
     {
         System.out.println("TaskProcessor.startProcessing");
+        ServerData data = null;
+        try
+        {
+            openDataSource();
+            data = new ServerData();
+            try
+            {
+                data.setDataSource((DataSource) new InitialContext().lookup("/gamedata-server_datasource"));
+            }
+            catch (NamingException e)
+            {
+                throw new ServletException(e);
+            }
+        }
+        catch (ServletException e)
+        {
+            // TODO: handle error and provide data for status page
+            e.printStackTrace();
+            return;
+        }
+        final ServerData serverData = data;
+
         executor.submit(() ->
         {
             while (true)
@@ -31,7 +73,7 @@ public class TaskProcessor
                 try
                 {
                     StorageRequestTask task = RequestQueueManager.takeTask();
-                    processTask(task);
+                    processTask(serverData, task);
                 }
                 catch (InterruptedException e)
                 {
@@ -42,7 +84,7 @@ public class TaskProcessor
         });
     }
 
-    private static void processTask(final StorageRequestTask task)
+    private static void processTask(final ServerData data, final StorageRequestTask task)
     {
         try
         {
@@ -70,12 +112,82 @@ public class TaskProcessor
                 return;
             }
 
-            store(task, requestMap);
+            store(data, task, requestMap);
         }
         catch (Exception e)
         {
             // TODO: log error to log file
             return;
+        }
+    }
+
+    static void openDataSource() throws ServletException
+    {
+        System.getProperties().setProperty("org.jooq.no-logo", "true");
+
+        // retrieve the username and password for the database
+        String homeFolder = System.getProperty("user.home");
+        if (homeFolder == null)
+        {
+            throw new ServletException("Home folder to retrieve database credentials not found");
+        }
+        String configDir = homeFolder + File.separator + "gamedata";
+        File configFile = new File(configDir, "gamedata.properties");
+        Properties gamedataProperties = new Properties();
+        try
+        {
+            InputStream stream = new FileInputStream(configFile);
+            gamedataProperties.load(stream);
+        }
+        catch (FileNotFoundException fnfe)
+        {
+            throw new ServletException(
+                    "File with database credentials not found at " + configDir + "/" + "gamedata.properties");
+        }
+        catch (IOException ioe)
+        {
+            throw new ServletException("Error when reading database credentials at " + configDir + "/" + "gamedata.properties");
+        }
+        String dbUser = gamedataProperties.getProperty("dbUser");
+        String dbPassword = gamedataProperties.getProperty("dbPassword");
+        if (dbUser == null || dbPassword == null)
+        {
+            throw new ServletException(
+                    "Properties dbUser or dbPassword not found in " + configDir + "/" + "gamedata.properties");
+        }
+
+        // determine the connection pool, and create one if it does not yet exist (first use after server restart)
+        try
+        {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        }
+        catch (ClassNotFoundException e)
+        {
+            throw new ServletException(e);
+        }
+
+        try
+        {
+            Context ctx = new InitialContext();
+            try
+            {
+                ctx.lookup("/gamedata-server_datasource");
+            }
+            catch (NamingException ne)
+            {
+                final HikariConfig config = new HikariConfig();
+                config.setJdbcUrl("jdbc:mysql://localhost:3306/gamedata");
+                config.setUsername(dbUser);
+                config.setPassword(dbPassword);
+                config.setMaximumPoolSize(2);
+                config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+                DataSource dataSource = new HikariDataSource(config);
+                ctx.bind("/gamedata-server_datasource", dataSource);
+            }
+        }
+        catch (NamingException e)
+        {
+            throw new ServletException(e);
         }
     }
 
@@ -140,9 +252,12 @@ public class TaskProcessor
         }
     }
 
-    static void store(final StorageRequestTask task, final Map<String, String> requestMap)
+    static void store(final ServerData data, final StorageRequestTask task, final Map<String, String> requestMap)
     {
         System.out.println(requestMap);
+        DSLContext dsl = data.getDSL();
+        List<GameSessionRecord> gsList = dsl.selectFrom(Tables.GAME_SESSION).fetch();
+        System.out.println(gsList);
 
         /*-
         HttpSession session = request.getSession();

@@ -16,6 +16,7 @@ public class AppLifecycleListener implements ServletContextListener
     @Override
     public void contextInitialized(final ServletContextEvent sce)
     {
+        System.out.println("contextInitialized");
         TaskProcessor.startProcessing();
     }
 
