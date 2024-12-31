@@ -1,23 +1,30 @@
-# API for mission event data
+# API for player event data
 
-The fields for the mission event are as follows. Note that the field name is used in lower case for the key in the form-data GET or POST request, as the key in the JSON payload, and as the tag name in the XML payload. All keys are in lower case and use 'snaking' with underscores as indicated in the table.
+The fields for the player event are as follows. Note that the field name is used in lower case for the key in the form-data GET or POST request, as the key in the JSON payload, and as the tag name in the XML payload. All keys are in lower case and use 'snaking' with underscores as indicated in the table.
 
 | key           | required? | type | explanation         |
 | ------------- | --------- | ---- | ------------------- |
-| `data`          | required | string | Value should be `mission_event`, lower case with underscore. |
+| `data`          | required | string | Value should be `player_event`, lower case with underscore. |
 | `session_token` | required | string(45) | Token to identify the game session, game version, game, and organization responsible for playing the game. See below for anonymous sessions that do not use a token, and where a session might be created on-the-fly. |
 | `organization_game_token` | depends | string(255) | Token that might be used by the organization to limit access in writing data to the database for the game. This value will only be checked if `organization_game.token_forced` is equal to `true` (`1`). When the token is forced, and it cannot be found for the provided game and organization, the record is not written to the database. When the token is not forced, it is not checked, and it does not need to be provided. |
 | `game_token` | depends | string(255) | Token that might be used by the game admin to limit access in writing data to the database for the game. This value will only be checked if `game.token_forced` is equal to `true` (`1`). When the token is forced, and it cannot be found for the provided game, the record is not written to the database. When the token is not forced, it is not checked, and it does not need to be provided. |
 | `game_mission`  | required | string(16) | Code of the game mission for which this is an event. Every game has at least one mission. The mission code will be looked up for the game that is implicitly encoded in the `session_token`. |
+| `player_attempt_nr`  | optional | int | The attempt number in case the player can do multiple attempts at the game mission. If the `player_attempt_nr` is not provided, it will automatically get a value of 1. |
+| `player_attempt_status`  | optional | string(45) | Optional description of the attempt in case the player can do multiple attempts at the game mission. An example is a "REGULAR" attempt (attempt nr 1) and a "RETRY" (attempt nr 2). If the `player_attempt_status` is missing, it will remain blank. |
+| `player_name` | required | string(255) | The (game-internally known) name of the player. This could be a generated UUID string, a pin code, a player number, a pointer to a record in the personnel or student database, or an email-address. Of course, it can also be a self-chosen name. Most important is that it is **unique** within the game session. Results per player will be clustered using the `player_name`. |
+| `player_display_name` | optional | string(45) | The (often self chosen) display name or screen name of the player. This is the name that will typically be used in the display of player results and scores. |
+| `group_name` | optional | string(45) | Optional name of a group to which the player belongs. A player typically belongs to maximally one group, but it is possible to serve multiple roles in the same group, and even belong to multiple groups. |
+| `group_role` | optional | string(45) | Optional role within the group to which the player belongs. If a group is provided, but no role is given, "MEMBER" is inserted for the group role. If a `group_role` is provided, but no group is given, this is a (recoverable) error. |
 | `type`          | optional | string(45) | The type of data being sent. When not included, `string` is assumed. See below for a table with types. |
 | `key`           | required | string(45) | The key of maximum 45 characters. Although the key can contain any characters, keys typically do not have spaces and consist of ASCII characters. |
 | `value`        | required | text(65535) | The value belonging to the key, of the appropriate type. The value can be a multi-line string. Max 65,535 characters. |
 | `timestamp`   | don't use | timestamp | The timestamp is normally inserted by the server at the moment of receiving the data, and stored in UTC time. In case you would want to override the timestamp, it can be provided in the data. In that case, the server will not allocate it's own timestamp. |
+| `mission_attempt` | optional | int | A number that indicates the count of the number of attempts *within the player attempt* to complete a mission. It can be used to group and order the events. **NOTE**: with the availability of a `player_attempt` and `grouping_code` this field can probably be removed. |
 | `status`      | optional | string(45) | If the data sent is linked to some status, it can be provided in this field. Max 45 characters. |
 | `round`       | optional | string(16) | If the data sent is linked to a round, it can be provided in this field. Rounds can be a number, but also text, e.g., `Practice-1`. It is always stored as a text field in the database. The maximum length is 16 characters. |
 | `game_time`   | optional | string(45) | Many games keep their own clock that is different from the wall clock. This can be measured in many different ways, e.g., seconds since the start, or years in an environmental game. The `game_time` can be 45 characters, and it is always stored as a text field in the database. |
 | `grouping_code` | optional | string(45) | The optional grouping code of max 45 characters can be used to filter data using different headings. This can help in the data analysis. A `grouping_code` could, for instance, be `error` where session events store exceptions in the execution of the game. |
-| `facilitator_initiated` | optional | boolean | Indicates whether the event was initiated by manual intervention of the facilitator (`true`) or an autonomous event by the game (`false`). The default value is `false`. | 
+| `player_initiated` | optional | boolean | Indicates whether the event was initiated by an action of the player (`true`) or an autonomous event by the game (`false`). The default value is `false`. | 
 
 
 
@@ -26,7 +33,7 @@ If a particular Game Session does not exists yet, and the organization allows fo
 
 | key           | required? | type | explanation         |
 | ------------- | --------- | ---- | ------------------- |
-| `data`          | required | string | Value should be `mission_event`, lower case with underscore. |
+| `data`          | required | string | Value should be `player_event`, lower case with underscore. |
 | `game_session_code` | required | string(16) | Code to identify the game session. Make sure it is unique for the game - organization combination. |
 | `game_code` | required | string(20) | Code to identify the game. This record needs to exist in the database. |
 | `game_version_code` | required | string(16) | Code to identify the game-version within the game. This record needs to exist in the database. |
@@ -66,10 +73,11 @@ Possible extensions for the types could be: `time`, `duration`, `color` and `coo
 | `organization_game_token` invalid | When the `organization_game_token` is forced, but not valid, the data will not be written to the database. The data is written to disk into a log file instead. |
 | `game_token` is not valid | When the `game_token` is forced, but not valid, the data will not be written to the database. The data is written to disk into a log file instead. |
 | `game_mission` does not exist | When the `game_mission` does not exist, it is impossible to link the `mission_data` to a mission. Therefore, the data will not be written to the database. The data is written to disk into a log file instead. |
+| `player_attempt_nr` not a number | When `player_attempt_nr` is not a an integer value, the data is still written to the database. A value of `1` is used for the attempt number. A warning is logged to the log file. |
 | `type` is invalid | When the `type` is not one of the permissable types (see above), the data is still written to the database. A warning is logged to the log file. |
 | `value` not valid | When the `value` does not correspond to the `type` (e.g., text for an integer type), the data will still be written to the database. A warning is logged to the log file. |
 | `timestamp` is invalid | If the `timestamp` is provided, but it does not contain a legible date plus time, data is still written to the database. The given timestamp is replaced by the timestamp of the server. A warning is logged to the log file. |
-| `facilitator_initiated` invalid | If the `facilitator_initiated` does not contain a boolean (`T` or `1` or `true` or `TRUE` for a true value, and `F` or `0` or `false` or `FALSE` for a false value), the value is assumed to be `false`. The data is still written to the database. A warning is logged to the log file. |
+| `player_initiated` invalid | If the `player_initiated` does not contain a boolean (`T` or `1` or `true` or `TRUE` for a true value, and `F` or `0` or `false` or `FALSE` for a false value), the value is assumed to be `false`. The data is still written to the database. A warning is logged to the log file. |
 | `game_code` not found | (for anonymous data). When the `game_code` does not exist in the database, we do not know for which game to store the data. Therefore, the data cannot be stored. The data is written to disk into a log file instead. |
 | `game_version_code` not found | (for anonymous data). When the `game_version_code` does not exist in the database, we do not know for which game version to store the data. Therefore, the data cannot be stored. The data is written to disk into a log file instead. |
 | `organization_code` not found | (for anonymous data). When the `organization_code` does not exist in the database, we do not know for which organization to store the data, nor whether the organization is allowed to store data for the game. Therefore, the data cannot be stored. The data is written to disk into a log file instead. |
