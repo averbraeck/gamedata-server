@@ -9,7 +9,6 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -18,7 +17,6 @@ import java.util.concurrent.Executors;
 import javax.servlet.ServletException;
 import javax.sql.DataSource;
 
-import org.jooq.DSLContext;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -26,9 +24,6 @@ import org.jsoup.nodes.Element;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
-import nl.gamedata.data.Tables;
-import nl.gamedata.data.tables.records.GameSessionRecord;
 
 /**
  * The TaskProcessor is for now a single-threaded process taking care of processing storage tasks from jobs in the queue.
@@ -40,6 +35,8 @@ public class TaskProcessor
 
     private static boolean active = false;
 
+    private static String servletError = "";
+
     public static void startProcessing()
     {
         final ServerData serverData = new ServerData();
@@ -49,7 +46,8 @@ public class TaskProcessor
         }
         catch (ServletException e)
         {
-            // TODO: handle error and provide data for status page
+            active = false;
+            servletError = e.getMessage();
             e.printStackTrace();
             return;
         }
@@ -69,6 +67,10 @@ public class TaskProcessor
                     Thread.currentThread().interrupt();
                     break;
                 }
+                catch (Exception exception)
+                {
+                    // log error and continue...
+                }
             }
         });
         active = false;
@@ -81,32 +83,33 @@ public class TaskProcessor
             // turn the request into a Map of keys and values.
             Map<String, String> requestMap = new HashMap<>();
             if ("GET".equals(task.requestType()))
-                convertFormTask(task, requestMap);
+                convertFormTask(data, task, requestMap);
             else if ("POST".equals(task.requestType()))
             {
                 if (task.contentType().toLowerCase().contains("x-www-form-urlencoded"))
-                    convertFormTask(task, requestMap);
+                    convertFormTask(data, task, requestMap);
                 else if (task.contentType().toLowerCase().contains("application/json"))
-                    convertJsonTask(task, requestMap);
+                    convertJsonTask(data, task, requestMap);
                 else if (task.contentType().toLowerCase().contains("application/xml"))
-                    convertXmlTask(task, requestMap);
+                    convertXmlTask(data, task, requestMap);
                 else
                 {
-                    // TODO: log request with unknown request type to log file
+                    ErrorHandler.storeError(data, task, requestMap,
+                            "Unknown Content-Type in POST request: " + task.contentType());
                     return;
                 }
             }
             else
             {
-                // TODO: log non-GET/POST request to log file
+                ErrorHandler.storeError(data, task, requestMap, "HTTP request is not GET or POST: " + task.requestType());
                 return;
             }
 
-            store(data, task, requestMap);
+            new StorageProcessor(data, task, requestMap).store();
         }
         catch (Exception e)
         {
-            // TODO: log error to log file
+            ErrorHandler.storeError(data, task, null, "Error during processTask : " + e.getMessage());
             return;
         }
     }
@@ -166,20 +169,30 @@ public class TaskProcessor
         return dataSource;
     }
 
-    static void convertFormTask(final StorageRequestTask task, final Map<String, String> requestMap)
+    static void convertFormTask(final ServerData data, final StorageRequestTask task, final Map<String, String> requestMap)
     {
-        String[] pairs = task.payload().split("&");
-        for (String pair : pairs)
+        try
         {
-            String[] keyValue = pair.split("=", 2);
-            String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8).toLowerCase().strip();
-            String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) : "";
-            // TODO: check if key already exists?
-            requestMap.put(key, value);
+            String[] pairs = task.payload().split("&");
+            for (String pair : pairs)
+            {
+                String[] keyValue = pair.split("=", 2);
+                String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8).toLowerCase().strip();
+                String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) : "";
+                if (requestMap.containsKey(key))
+                    ErrorHandler.storeError(data, task, requestMap,
+                            "Error during convertFormTask : key " + key + " has been used twice. Record still processed ");
+                requestMap.put(key, value);
+            }
+        }
+        catch (Exception e)
+        {
+            ErrorHandler.storeError(data, task, requestMap, "Error during convertFormTask : " + e.getMessage());
+            return;
         }
     }
 
-    static void convertJsonTask(final StorageRequestTask task, final Map<String, String> requestMap)
+    static void convertJsonTask(final ServerData data, final StorageRequestTask task, final Map<String, String> requestMap)
     {
         // Normalize input for outer { } quotes
         String jsonString = task.payload().trim();
@@ -194,18 +207,20 @@ public class TaskProcessor
             {
                 String key = keys.next().toLowerCase().trim();
                 String value = jsonObject.optString(key, ""); // Default value is empty if key has no value
-                // TODO: check if key already exists?
+                if (requestMap.containsKey(key))
+                    ErrorHandler.storeError(data, task, requestMap,
+                            "Error during convertJsonTask : key " + key + " has been used twice. Record still processed ");
                 requestMap.put(key, value);
             }
         }
         catch (Exception e)
         {
-            // TODO: log error
+            ErrorHandler.storeError(data, task, requestMap, "Error during convertJsonTask : " + e.getMessage());
             return;
         }
     }
 
-    static void convertXmlTask(final StorageRequestTask task, final Map<String, String> requestMap)
+    static void convertXmlTask(final ServerData data, final StorageRequestTask task, final Map<String, String> requestMap)
     {
         try
         {
@@ -217,36 +232,17 @@ public class TaskProcessor
             {
                 String key = child.tagName().toLowerCase(); // Tag name is the key
                 String value = child.text(); // Text content is the value
+                if (requestMap.containsKey(key))
+                    ErrorHandler.storeError(data, task, requestMap,
+                            "Error during convertXmlTask : key " + key + " has been used twice. Record still processed ");
                 requestMap.put(key, value);
             }
         }
         catch (Exception e)
         {
-            // TODO: log error
+            ErrorHandler.storeError(data, task, requestMap, "Error during convertXmlTask : " + e.getMessage());
             return;
         }
-    }
-
-    static void store(final ServerData data, final StorageRequestTask task, final Map<String, String> requestMap)
-    {
-        System.out.println(requestMap);
-        DSLContext dsl = data.getDSL();
-        List<GameSessionRecord> gsList = dsl.selectFrom(Tables.GAME_SESSION).fetch();
-        System.out.println(gsList);
-
-        /*-
-        HttpSession session = request.getSession();
-        ServerData data = new ServerData();
-        session.setAttribute("serverData", data);
-        try
-        {
-            data.setDataSource((DataSource) new InitialContext().lookup("/gamedata-server_datasource"));
-        }
-        catch (NamingException e)
-        {
-            throw new ServletException(e);
-        }
-         */
     }
 
     public static void stopProcessing()
@@ -258,5 +254,10 @@ public class TaskProcessor
     public static boolean isActive()
     {
         return active;
+    }
+
+    public static String getServletError()
+    {
+        return servletError;
     }
 }
