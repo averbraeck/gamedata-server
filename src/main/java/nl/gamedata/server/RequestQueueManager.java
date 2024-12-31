@@ -12,7 +12,7 @@ public class RequestQueueManager
 {
     private static final BlockingQueue<StorageRequestTask> queue = new LinkedBlockingQueue<>();
 
-    public static void addTask(StorageRequestTask task)
+    public static void addTask(final StorageRequestTask task)
     {
         queue.offer(task);
     }
@@ -25,5 +25,10 @@ public class RequestQueueManager
     public static boolean isEmpty()
     {
         return queue.isEmpty();
+    }
+
+    public static int numberOfTasks()
+    {
+        return queue.size();
     }
 }

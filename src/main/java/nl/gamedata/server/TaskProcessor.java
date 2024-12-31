@@ -15,9 +15,6 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.sql.DataSource;
 
@@ -41,22 +38,14 @@ public class TaskProcessor
 {
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
+    private static boolean active = false;
+
     public static void startProcessing()
     {
-        System.out.println("TaskProcessor.startProcessing");
-        ServerData data = null;
+        final ServerData serverData = new ServerData();
         try
         {
-            openDataSource();
-            data = new ServerData();
-            try
-            {
-                data.setDataSource((DataSource) new InitialContext().lookup("/gamedata-server_datasource"));
-            }
-            catch (NamingException e)
-            {
-                throw new ServletException(e);
-            }
+            serverData.setDataSource(openDataSource());
         }
         catch (ServletException e)
         {
@@ -64,12 +53,12 @@ public class TaskProcessor
             e.printStackTrace();
             return;
         }
-        final ServerData serverData = data;
 
         executor.submit(() ->
         {
             while (true)
             {
+                active = true;
                 try
                 {
                     StorageRequestTask task = RequestQueueManager.takeTask();
@@ -82,6 +71,7 @@ public class TaskProcessor
                 }
             }
         });
+        active = false;
     }
 
     private static void processTask(final ServerData data, final StorageRequestTask task)
@@ -121,7 +111,7 @@ public class TaskProcessor
         }
     }
 
-    static void openDataSource() throws ServletException
+    static DataSource openDataSource() throws ServletException
     {
         System.getProperties().setProperty("org.jooq.no-logo", "true");
 
@@ -166,29 +156,14 @@ public class TaskProcessor
             throw new ServletException(e);
         }
 
-        try
-        {
-            Context ctx = new InitialContext();
-            try
-            {
-                ctx.lookup("/gamedata-server_datasource");
-            }
-            catch (NamingException ne)
-            {
-                final HikariConfig config = new HikariConfig();
-                config.setJdbcUrl("jdbc:mysql://localhost:3306/gamedata");
-                config.setUsername(dbUser);
-                config.setPassword(dbPassword);
-                config.setMaximumPoolSize(2);
-                config.setDriverClassName("com.mysql.cj.jdbc.Driver");
-                DataSource dataSource = new HikariDataSource(config);
-                ctx.bind("/gamedata-server_datasource", dataSource);
-            }
-        }
-        catch (NamingException e)
-        {
-            throw new ServletException(e);
-        }
+        final HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:mysql://localhost:3306/gamedata");
+        config.setUsername(dbUser);
+        config.setPassword(dbPassword);
+        config.setMaximumPoolSize(2);
+        config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        DataSource dataSource = new HikariDataSource(config);
+        return dataSource;
     }
 
     static void convertFormTask(final StorageRequestTask task, final Map<String, String> requestMap)
@@ -277,6 +252,11 @@ public class TaskProcessor
     public static void stopProcessing()
     {
         executor.shutdownNow();
+        active = false;
     }
 
+    public static boolean isActive()
+    {
+        return active;
+    }
 }
