@@ -1,12 +1,11 @@
 package nl.gamedata.server;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
 import javax.naming.Context;
@@ -17,14 +16,10 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
-import jakarta.xml.bind.DatatypeConverter;
-import nl.gamedata.data.tables.records.UserRecord;
 
 /**
  * GameDataServer.java.
@@ -37,6 +32,8 @@ import nl.gamedata.data.tables.records.UserRecord;
 @WebServlet("/store")
 public class GameDataServer extends HttpServlet
 {
+    private static final long serialVersionUID = 1L;
+
     @Override
     public void init() throws ServletException
     {
@@ -113,57 +110,48 @@ public class GameDataServer extends HttpServlet
     protected void doPost(final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException
     {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-        HttpSession session = request.getSession();
-        ServerData data = new ServerData();
-        session.setAttribute("serverData", data);
-        try
+        StringBuilder payload = new StringBuilder();
+        try (BufferedReader reader = request.getReader())
         {
-            data.setDataSource((DataSource) new InitialContext().lookup("/gamedata-server_datasource"));
-        }
-        catch (NamingException e)
-        {
-            throw new ServletException(e);
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+                payload.append(line);
+            }
         }
 
-        UserRecord user = ServerUtils.readUserFromUsername(data, username);
-        if (user != null)
-        {
-            MessageDigest md;
-            String hashedPassword;
-            try
-            {
-                // https://www.baeldung.com/java-md5
-                md = MessageDigest.getInstance("MD5");
-                String saltedPassword = password + user.getSalt();
-                md.update(saltedPassword.getBytes());
-                byte[] digest = md.digest();
-                hashedPassword = DatatypeConverter.printHexBinary(digest).toLowerCase();
-            }
-            catch (NoSuchAlgorithmException e1)
-            {
-                throw new ServletException(e1);
-            }
+        String contentType = request.getContentType();
+        // TODO: handle not-supported content types
 
-            String userPassword = user == null ? "" : user.getPassword() == null ? "" : user.getPassword();
-            if (user != null && userPassword.equals(hashedPassword))
-            {
-                data.setUsername(user.getName());
-                data.setUser(user);
-                response.sendRedirect("jsp/server/server.jsp");
-                return;
-            }
-        }
-        session.removeAttribute("serverData");
-        response.sendRedirect("jsp/server/login.jsp");
+        // Add task to queue
+        StorageRequestTask task = new StorageRequestTask("POST", contentType.toLowerCase(), payload.toString());
+        RequestQueueManager.addTask(task);
+
+        // Respond to client
+        response.setStatus(HttpServletResponse.SC_ACCEPTED);
+        response.getWriter().write("Task submitted successfully");
     }
 
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException
     {
-        response.sendRedirect("jsp/server/login.jsp");
+        String queryString = request.getQueryString();
+        if (queryString == null)
+        {
+            // TODO: empty request -- ignore
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("Missing query string in GET request");
+            return;
+        }
+
+        // Add task to queue
+        StorageRequestTask task = new StorageRequestTask("GET", "x-www-form-urlencoded", queryString);
+        RequestQueueManager.addTask(task);
+
+        // Respond to client
+        response.setStatus(HttpServletResponse.SC_ACCEPTED);
+        response.getWriter().write("Task submitted successfully");
     }
 
 }
