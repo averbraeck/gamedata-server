@@ -102,7 +102,7 @@ public class StorageProcessor
 
     private void handleMissionEvent()
     {
-        MissionEventRecord missionEvent = Tables.MISSION_EVENT.newRecord();
+        MissionEventRecord missionEvent = this.data.getDSL().newRecord(Tables.MISSION_EVENT);
         missionEvent.setGameSessionId(this.gameSession.getId());
         missionEvent.setGameMissionId(this.gameMission.getId());
         missionEvent.setType(parseString("type", false, "string"));
@@ -127,7 +127,7 @@ public class StorageProcessor
     {
         if (!retrievePlayer())
             return;
-        PlayerEventRecord playerEvent = Tables.PLAYER_EVENT.newRecord();
+        PlayerEventRecord playerEvent = this.data.getDSL().newRecord(Tables.PLAYER_EVENT);
         playerEvent.setPlayerAttemptId(this.playerAttempt.getId());
         playerEvent.setType(parseString("type", false, "string"));
         String key = parseString("key", true);
@@ -151,7 +151,7 @@ public class StorageProcessor
     {
         if (!retrieveGroup())
             return;
-        GroupEventRecord groupEvent = Tables.GROUP_EVENT.newRecord();
+        GroupEventRecord groupEvent = this.data.getDSL().newRecord(Tables.GROUP_EVENT);
         groupEvent.setGroupAttemptId(this.groupAttempt.getId());
         groupEvent.setType(parseString("type", false, "string"));
         String key = parseString("key", true);
@@ -175,7 +175,7 @@ public class StorageProcessor
     {
         if (!retrievePlayer())
             return;
-        PlayerScoreRecord playerScore = Tables.PLAYER_SCORE.newRecord();
+        PlayerScoreRecord playerScore = this.data.getDSL().newRecord(Tables.PLAYER_SCORE);
         RecordId playerObjectiveId = retrievePlayerObjectiveId(false);
         if (!playerObjectiveId.ok())
             return;
@@ -211,7 +211,7 @@ public class StorageProcessor
     {
         if (!retrieveGroup())
             return;
-        GroupScoreRecord groupScore = Tables.GROUP_SCORE.newRecord();
+        GroupScoreRecord groupScore = this.data.getDSL().newRecord(Tables.GROUP_SCORE);
         RecordId groupObjectiveId = retrieveGroupObjectiveId(false);
         if (!groupObjectiveId.ok())
             return;
@@ -327,7 +327,7 @@ public class StorageProcessor
             }
             if (this.gameSession == null)
             {
-                this.gameSession = Tables.GAME_SESSION.newRecord();
+                this.gameSession = this.data.getDSL().newRecord(Tables.GAME_SESSION);
                 this.gameSession.setOrganizationId(this.organization.getId());
                 this.gameSession.setGameVersionId(this.gameVersion.getId());
                 this.gameSession.setCode(gameSessionCode);
@@ -443,7 +443,7 @@ public class StorageProcessor
                 .fetchAny();
         if (this.player == null)
         {
-            this.player = Tables.PLAYER.newRecord();
+            this.player = this.data.getDSL().newRecord(Tables.PLAYER);
             this.player.setName(playerName);
             this.player.setDisplayName(parseString("display_name", false, playerName.substring(0, 45)));
             this.player.setGameSessionId(this.gameSession.getId());
@@ -459,7 +459,7 @@ public class StorageProcessor
                 .fetchAny();
         if (this.playerAttempt == null)
         {
-            this.playerAttempt = Tables.PLAYER_ATTEMPT.newRecord();
+            this.playerAttempt = this.data.getDSL().newRecord(Tables.PLAYER_ATTEMPT);
             this.playerAttempt.setAttemptNr(playerAttemptNr);
             this.playerAttempt.setStatus(parseString("player_attempt_status", false, ""));
             this.playerAttempt.setGameMissionId(this.gameMission.getId());
@@ -477,7 +477,7 @@ public class StorageProcessor
                     .fetchAny();
             if (this.group == null)
             {
-                this.group = Tables.GROUP.newRecord();
+                this.group = this.data.getDSL().newRecord(Tables.GROUP);
                 this.group.setName(groupName);
                 this.group.setGameSessionId(this.gameSession.getId());
                 this.group.store();
@@ -488,7 +488,7 @@ public class StorageProcessor
                     .fetchAny();
             if (this.groupRole == null)
             {
-                this.groupRole = Tables.GROUP_ROLE.newRecord();
+                this.groupRole = this.data.getDSL().newRecord(Tables.GROUP_ROLE);
                 this.groupRole.setName(groupRoleName);
                 this.groupRole.setPlayerId(this.player.getId());
                 this.groupRole.setGroupId(this.group.getId());
@@ -515,7 +515,7 @@ public class StorageProcessor
                 .fetchAny();
         if (this.group == null)
         {
-            this.group = Tables.GROUP.newRecord();
+            this.group = this.data.getDSL().newRecord(Tables.GROUP);
             this.group.setName(groupName);
             this.group.setGameSessionId(this.gameSession.getId());
             this.group.store();
@@ -530,7 +530,7 @@ public class StorageProcessor
                 .fetchAny();
         if (this.groupAttempt == null)
         {
-            this.groupAttempt = Tables.GROUP_ATTEMPT.newRecord();
+            this.groupAttempt = this.data.getDSL().newRecord(Tables.GROUP_ATTEMPT);
             this.groupAttempt.setAttemptNr(groupAttemptNr);
             this.groupAttempt.setStatus(parseString("group_attempt_status", false, ""));
             this.groupAttempt.setGameMissionId(this.gameMission.getId());
