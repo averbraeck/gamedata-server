@@ -717,7 +717,7 @@ public class StorageProcessor
         }
         catch (Exception e)
         {
-            error("DateTime " + dtString + " for key " + key + " not valid for game session " + this.gameSession.getCode()
+            warning("DateTime " + dtString + " for key " + key + " not valid for game session " + this.gameSession.getCode()
                     + " for game " + this.game.getCode() + " -- format is ISO-8601, e.g., 2024-12-03T10:15:30");
             return defaultValue;
         }
@@ -743,8 +743,8 @@ public class StorageProcessor
         }
         catch (Exception e)
         {
-            error("Byte " + bString + " for key " + key + " not valid for game session " + this.gameSession.getCode()
-                    + " for game " + this.game.getCode() + " -- format is ISO-8601, e.g., 2024-12-03T10:15:30");
+            warning("Byte " + bString + " for key " + key + " not valid for game session " + this.gameSession.getCode()
+                    + " for game " + this.game.getCode());
             return defaultValue;
         }
     }
@@ -768,7 +768,7 @@ public class StorageProcessor
         }
         catch (Exception e)
         {
-            error("Integer " + iString + " for key " + key + " not valid for game session " + this.gameSession.getCode()
+            warning("Integer " + iString + " for key " + key + " not valid for game session " + this.gameSession.getCode()
                     + " for game " + this.game.getCode());
             return defaultValue;
         }
@@ -793,7 +793,7 @@ public class StorageProcessor
         }
         catch (Exception e)
         {
-            error("Double " + dString + " for key " + key + " not valid for game session " + this.gameSession.getCode()
+            warning("Double " + dString + " for key " + key + " not valid for game session " + this.gameSession.getCode()
                     + " for game " + this.game.getCode());
             return defaultValue;
         }
@@ -802,6 +802,11 @@ public class StorageProcessor
     private void error(final String message)
     {
         ErrorHandler.storeError(this.data, this.task, this.requestMap, message);
+    }
+
+    private void warning(final String message)
+    {
+        ErrorHandler.storeWarning(this.data, this.task, this.requestMap, message);
     }
 
     record RecordId(Integer id, boolean ok)

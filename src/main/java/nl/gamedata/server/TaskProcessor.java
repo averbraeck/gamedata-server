@@ -180,7 +180,7 @@ public class TaskProcessor
                 String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8).toLowerCase().strip();
                 String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) : "";
                 if (requestMap.containsKey(key))
-                    ErrorHandler.storeError(data, task, requestMap,
+                    ErrorHandler.storeWarning(data, task, requestMap,
                             "Error during convertFormTask : key " + key + " has been used twice. Record still processed ");
                 requestMap.put(key, value);
             }
@@ -208,7 +208,7 @@ public class TaskProcessor
                 String key = keys.next().toLowerCase().trim();
                 String value = jsonObject.optString(key, ""); // Default value is empty if key has no value
                 if (requestMap.containsKey(key))
-                    ErrorHandler.storeError(data, task, requestMap,
+                    ErrorHandler.storeWarning(data, task, requestMap,
                             "Error during convertJsonTask : key " + key + " has been used twice. Record still processed ");
                 requestMap.put(key, value);
             }
@@ -233,7 +233,7 @@ public class TaskProcessor
                 String key = child.tagName().toLowerCase(); // Tag name is the key
                 String value = child.text(); // Text content is the value
                 if (requestMap.containsKey(key))
-                    ErrorHandler.storeError(data, task, requestMap,
+                    ErrorHandler.storeWarning(data, task, requestMap,
                             "Error during convertXmlTask : key " + key + " has been used twice. Record still processed ");
                 requestMap.put(key, value);
             }
