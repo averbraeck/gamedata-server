@@ -109,6 +109,7 @@ public class TaskProcessor
         }
         catch (Exception e)
         {
+            e.printStackTrace();
             ErrorHandler.storeError(data, task, null, "Error during processTask : " + e.getMessage());
             return;
         }

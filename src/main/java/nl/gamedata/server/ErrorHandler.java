@@ -35,22 +35,30 @@ public class ErrorHandler
         System.err.println("  map: " + requestMap);
 
         // store in database
-        ErrorRecord error = Tables.ERROR.newRecord();
-        error.setTimestamp(task.timestamp());
-        error.setErrorType(errorType);
-        error.setRecordStored(recordStored ? (byte) 1 : (byte) 0);
-        error.setMessage(message);
-        error.setContent(task.payload());
-        if (requestMap.containsKey("data"))
-            error.setDataType(requestMap.get("data"));
-        if (requestMap.containsKey("session_token"))
-            error.setSessionToken(requestMap.get("session_token"));
-        if (requestMap.containsKey("game_session_code"))
-            error.setGameSessionCode(requestMap.get("game_session_code"));
-        if (requestMap.containsKey("game_version_code"))
-            error.setGameVersionCode(requestMap.get("game_version_code"));
-        if (requestMap.containsKey("organization_code"))
-            error.setOrganizationCode(requestMap.get("organization_code"));
-        error.store();
+        try
+        {
+            ErrorRecord error = data.getDSL().newRecord(Tables.ERROR);
+            error.setTimestamp(task.timestamp());
+            error.setErrorType(errorType);
+            error.setRecordStored(recordStored ? (byte) 1 : (byte) 0);
+            error.setMessage(message);
+            error.setContent(task.payload());
+            if (requestMap.containsKey("data"))
+                error.setDataType(requestMap.get("data"));
+            if (requestMap.containsKey("session_token"))
+                error.setSessionToken(requestMap.get("session_token"));
+            if (requestMap.containsKey("game_session_code"))
+                error.setGameSessionCode(requestMap.get("game_session_code"));
+            if (requestMap.containsKey("game_version_code"))
+                error.setGameVersionCode(requestMap.get("game_version_code"));
+            if (requestMap.containsKey("organization_code"))
+                error.setOrganizationCode(requestMap.get("organization_code"));
+            error.store();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            System.err.println("Could not store error record in the database: " + e.getMessage());
+        }
     }
 }
