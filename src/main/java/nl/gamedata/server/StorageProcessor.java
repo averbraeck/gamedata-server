@@ -446,7 +446,7 @@ public class StorageProcessor
         {
             this.player = this.data.getDSL().newRecord(Tables.PLAYER);
             this.player.setName(playerName);
-            this.player.setDisplayName(parseString("display_name", false, StringUtils.substring(playerName, 45)));
+            this.player.setDisplayName(parseString("player_display_name", false, StringUtils.substring(playerName, 45)));
             this.player.setGameSessionId(this.gameSession.getId());
             this.player.store();
         }
