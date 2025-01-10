@@ -7,6 +7,7 @@ import java.util.Map;
 import org.jooq.DSLContext;
 
 import nl.gamedata.common.SqlUtils;
+import nl.gamedata.common.StringUtils;
 import nl.gamedata.data.Tables;
 import nl.gamedata.data.tables.records.GameMissionRecord;
 import nl.gamedata.data.tables.records.GameRecord;
@@ -445,7 +446,7 @@ public class StorageProcessor
         {
             this.player = this.data.getDSL().newRecord(Tables.PLAYER);
             this.player.setName(playerName);
-            this.player.setDisplayName(parseString("display_name", false, playerName.substring(0, 45)));
+            this.player.setDisplayName(parseString("display_name", false, StringUtils.substring(playerName, 45)));
             this.player.setGameSessionId(this.gameSession.getId());
             this.player.store();
         }
