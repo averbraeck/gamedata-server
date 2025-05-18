@@ -1,8 +1,8 @@
 package nl.gamedata.server;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.annotation.WebListener;
 
 /**
  * The AppLifecycleListener is responsible for starting and stopping the TaskProcessor when the ServletContext is initialized or

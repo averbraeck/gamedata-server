@@ -14,7 +14,6 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.servlet.ServletException;
 import javax.sql.DataSource;
 
 import org.json.JSONObject;
@@ -24,6 +23,8 @@ import org.jsoup.nodes.Element;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
+import jakarta.servlet.ServletException;
 
 /**
  * The TaskProcessor is for now a single-threaded process taking care of processing storage tasks from jobs in the queue.
