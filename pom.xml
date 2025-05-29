@@ -19,11 +19,11 @@
 
     <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
     <jstl.version>3.0.2</jstl.version>
-    <mysql.connector.version>8.0.33</mysql.connector.version>
-    <jooq.version>3.18.6</jooq.version>
+    <mysql.connector.version>9.3.0</mysql.connector.version>
+    <jooq.version>3.19.23</jooq.version>
 
-    <maven.compiler.version>3.10.1</maven.compiler.version>
-    <maven.war.version>3.3.2</maven.war.version>
+    <maven.compiler.version>3.14.0</maven.compiler.version>
+    <maven.war.version>3.4.0</maven.war.version>
   </properties>
 
   <build>
@@ -80,10 +80,10 @@
         <version>${jstl.version}</version>
     </dependency>
 
-    <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+    <!-- https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
     <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
       <version>${mysql.connector.version}</version>
     </dependency>
 
